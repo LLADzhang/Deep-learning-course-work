@@ -67,7 +67,7 @@ class Conv2D:
             for ind in range(self.o_channel):
                 for row in range(out_height):
                     for col in range(out_width):
-                        temp_tensor = torch.mul(kernels[ind], img[:, row * self.stride : row * self.stride + self.kernel_size, col * self.stride : col * self.stride + self.kernel_size])
+                        temp_tensor = torch.mul(kernels[ind], img[:, row : row + self.kernel_size, col : col + self.kernel_size])
                         out_img[ind, row, col] = temp_tensor.sum()
                         mul_cnt += 1
                         add_cnt += 1

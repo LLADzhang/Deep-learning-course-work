@@ -6,10 +6,11 @@ import torch
 from sys import argv
 from time import time
 import csv
+import numpy as np 
+
 
 transform = Compose([ToTensor()])
 # transform a image to tensor (channel, height, width)
-
 img1 = Image.open("img1.jpg")
 img0 = Image.open('img0.jpg')
 img_tensors = [transform(img0), transform(img1)]
@@ -35,20 +36,20 @@ if argv[1] == 'partA':
                 # task 1
                 file_name = "image" + str(img_id) + "/plt_" + str(img_id) + "_partA_task" + str(tsk_id + 1) + "_k1.jpg"       
                 print("Save to", file_name, "\n")
-                save_image(output_img, file_name)
+                save_image(output_img, file_name, normalize=True)
 
             elif num_channels == 2:
                 # task 2
                 for i in range(num_channels):
                     file_name = "image" + str(img_id) + "/plt_" + str(img_id) + "_partA_task" + str(tsk_id + 1) + "_k" + str(i + 4) +".jpg"       
                     print("Save to", file_name, "\n")
-                    save_image(output_img[i, :, :], file_name)
+                    save_image(output_img[i, :, :], file_name, normalize=True)
             else:
                 # task 3 with 3 o channels
                 for i in range(num_channels):
                     file_name = "image" + str(img_id) + "/plt_" + str(img_id) + "_partA_task" + str(tsk_id + 1) + "_k" + str(i + 1) +".jpg"       
                     print("Save to", file_name, "\n")
-                    save_image(output_img[i, :, :], file_name)
+                    save_image(output_img[i, :, :], file_name, normalize=True)
 elif argv[1] == 'partB':
     print("Part B")
     task = tasks[0]

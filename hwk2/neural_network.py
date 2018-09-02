@@ -29,8 +29,16 @@ class NeuralNetwork:
 
         
     def forward(self, nn_input):
+        # the one iteration forward function
         def sigmoid(i):
             if type(i) != torch.DoubleTensor:
                 raise TypeError('Input of sigmoid is not DoubleTensor')
             return torch.pow(exp(1), i)
-
+       if type(i) != torch.DoubleTensor:
+           raise TypeError('Input of forward is not DoubleTensor')
+        bias = torch.ones(1, nn_input.size()[1], dtype=torch.double)
+        for i in self.theta.keys():
+            operation_input =  torch.cat((nn_input, bias), 0)
+            operation_input = sigmoid(torch.mm(torch.t(self.theta[i]), operation_input))
+        return operation_input
+        

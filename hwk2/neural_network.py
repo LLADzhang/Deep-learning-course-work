@@ -33,12 +33,15 @@ class NeuralNetwork:
             if str(i.type()) != 'torch.DoubleTensor':
                 raise TypeError('Input of sigmoid is not DoubleTensor')
             return 1 / (1 + torch.pow(exp(1), -i))
+
         if str(nn_input.type()) != 'torch.DoubleTensor':
             raise TypeError('Input of forward is not DoubleTensor')
-        
-        bias = torch.ones(1, nn_input.size()[1], dtype=torch.double)
+        si = [1] + list(nn_input.size()[1:])
+
+        bias = torch.ones(si, dtype=torch.double)
         operation_input = nn_input
         for i in self.theta.keys():
             operation_input =  torch.cat((operation_input, bias), 0)
             operation_input = sigmoid(torch.mm(torch.t(self.theta[i]), operation_input))
+            bias = torch.ones([1] + list(operation_input.size()[1:]), dtype=torch.double)
         return operation_input

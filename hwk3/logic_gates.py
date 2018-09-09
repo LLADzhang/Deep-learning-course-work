@@ -4,14 +4,14 @@ from neural_network import NeuralNetwork
 class AND:
     def __init__(self):
         self.and_nn = NeuralNetwork([2,1])
-        self.iterations = 100
-    
+        self.iterations = 100    
+
     def __call__(self, x, y):
         self.x, self.y = tuple(map(float, (x,y)))
         return bool(self.forward() > 0.5)
 
     def forward(self):
-        return self.and_nn.forward(torch.DoubleTensor([[self.x], [self.y]]))
+        return self.and_nn.forward(torch.DoubleTensor([[self.x, self.y]]))
 
 
     def train(self):
@@ -24,10 +24,12 @@ class AND:
             target[i, :] = dataset[i, 0] and dataset[i, 1] 
             
         for i in range(self.iterations):
+            print('\n\nITERATION', i)
             if self.and_nn.total_loss > 0.01:
+                print('dataset is', dataset)
                 self.and_nn.forward(dataset)
                 self.and_nn.backward(target)
-                self.updateParams(1)
+                self.and_nn.updateParams(1)
 
 
 class OR:

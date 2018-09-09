@@ -88,7 +88,8 @@ class NeuralNetwork:
             
             for i in range(self.L - 1, -1, -1):
                 if i != self.L - 1: 
-                    indices = torch.LongTensor([0,1])
+                    indices = torch.LongTensor(list(range(self.a[i].size()[0] - 1)))
+                    #indices = torch.LongTensor([0,1])
                     delta = torch.index_select(delta, 0, indices)
                 # from the layer before the output
                 self.dE_dTheta[i] = torch.mm(self.a[i], delta.t())

@@ -59,7 +59,9 @@ class NeuralNetwork:
 
         for i in self.theta.keys():
             print('i=',i)
-            self.a[i] =  torch.cat((operation_input, bias), 0)
+            print('a[{}]={}'.format(i, self.a[i]))
+            print('bias=',bias)
+            self.a[i] =  torch.cat((self.a[i], bias), 0)
             print('cat input', self.a[i])
             theta = torch.t(self.theta[i])
             print('theta', theta)
@@ -67,7 +69,8 @@ class NeuralNetwork:
             print('z', self.z[i+1])
             self.a[i + 1] = sigmoid(self.z[i + 1])
             print('a', self.a[i+1])
-            bias = torch.ones([1, self.a[i].size()[0]], dtype=torch.double)
+            bias = torch.ones([1, self.a[i].t().size()[0]], dtype=torch.double)
+            print('end bias', bias)
         print('return from forward', self.a[self.L].t())
         return self.a[self.L].t() 
 
@@ -84,14 +87,16 @@ class NeuralNetwork:
             print('delta', delta)
             
             for i in range(self.L - 1, -1, -1):
-                    
+                if i != self.L - 1: 
+                    indices = torch.LongTensor([0,1])
+                    delta = torch.index_select(delta, 0, indices)
                 # from the layer before the output
                 self.dE_dTheta[i] = torch.mm(self.a[i], delta.t())
+                delta = torch.mul(torch.mm(self.theta[i], delta), torch.mul(self.a[i], (1 - self.a[i])))
                 print('dE_dTheta', self.dE_dTheta[i])
                 print('theta', self.theta[i])
                 print('delta', delta)
                 print('diff_a', torch.mul(self.a[i], (1 - self.a[i])))
-                delta = torch.mul(torch.mm(self.theta[i], delta), torch.mul(self.a[i], (1 - self.a[i])))
         elif loss == 'CE':
             pass
 

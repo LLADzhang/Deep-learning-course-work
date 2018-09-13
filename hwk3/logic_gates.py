@@ -24,17 +24,17 @@ class AND:
         for i in range(len(dataset)):
             target[i, :] = dataset[i, 0] and dataset[i, 1] 
             
-        for i in range(self.iterations):
 
             #print('\n\nITERATION', i)
-            if self.and_nn.total_loss > 0.01:
-                #print('dataset is', dataset)
-                self.and_nn.forward(dataset)
-                self.and_nn.backward(target)
-                self.and_nn.updateParams(1)
-            else:
-                break
+        i = 0
+        while self.and_nn.total_loss > 0.01:
+            #print('dataset is', dataset)
+            self.and_nn.forward(dataset)
+            self.and_nn.backward(target)
+            self.and_nn.updateParams(1)
             line, = plt.plot(i, self.and_nn.total_loss, 'r*')
+            i +=1
+        
         line.set_label("AND Gate")
         plt.xlabel('Iteration')
         plt.ylabel('Total Loss')
@@ -61,15 +61,14 @@ class OR:
 
         for i in range(len(dataset)):
             target[i, :] = dataset[i, 0] or dataset[i, 1] 
-            
-        for i in range(self.iterations):
-            #print('\n\nITERATION', i)
-            if self.or_nn.total_loss > 0.01:
-                #print('dataset is', dataset)
-                self.or_nn.forward(dataset)
-                self.or_nn.backward(target)
-                self.or_nn.updateParams(1)
+        i = 0    
+        while self.or_nn.total_loss > 0.01:
+            #print('dataset is', dataset)
+            self.or_nn.forward(dataset)
+            self.or_nn.backward(target)
+            self.or_nn.updateParams(1)
             line, = plt.plot(i, self.or_nn.total_loss, 'b*')
+            i += 1
 
         line.set_label('OR Gate')
 
@@ -102,14 +101,14 @@ class NOT:
         for i in range(len(dataset)):
             target[i, :] = float(not dataset[i, 0])
             
-        for i in range(self.iterations):
-            #print('\n\nITERATION', i)
-            if self.not_nn.total_loss > 0.01:
+        i=0
+        while self.not_nn.total_loss > 0.01:
                 # print('dataset is', dataset)
-                self.not_nn.forward(dataset)
-                self.not_nn.backward(target)
-                self.not_nn.updateParams(1)
+            self.not_nn.forward(dataset)
+            self.not_nn.backward(target)
+            self.not_nn.updateParams(1)
             line, = plt.plot(i, self.not_nn.total_loss, 'c*')
+            i+=1
         line.set_label('NOT Gate')
         plt.xlabel('Iteration')
         plt.ylabel('Total Loss')
@@ -136,15 +135,17 @@ class XOR:
 
         for i in range(len(dataset)):
             target[i, :] = float((dataset[i, 0] or dataset[i, 1]) and (not (dataset[i,0] and dataset[i, 1])))
-            
-        for i in range(self.iterations):
-            #print('\n\nITERATION', i)
-            if self.xor_nn.total_loss > 0.01:
+           
+        i = 0
+        while self.xor_nn.total_loss > 0.01:
               #  print('dataset is', dataset)
-                self.xor_nn.forward(dataset)
-                self.xor_nn.backward(target)
-                self.xor_nn.updateParams(1)
+            self.xor_nn.forward(dataset)
+            self.xor_nn.backward(target)
+            self.xor_nn.updateParams(1)
             line, = plt.plot(i, self.xor_nn.total_loss, 'g*')
+            print(self.xor_nn.total_loss)
+            i += 1
+
         line.set_label('XOR Gate')
         plt.xlabel('Iteration')
         plt.ylabel('Total Loss')

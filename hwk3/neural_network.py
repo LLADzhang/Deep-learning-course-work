@@ -25,6 +25,8 @@ class NeuralNetwork:
                             ).type(torch.DoubleTensor)
         self.total_loss = 1 
 
+    def getTheta(self):
+        return self.theta
 
     def getLayer(self, layer):
         
@@ -38,7 +40,7 @@ class NeuralNetwork:
     def forward(self, nn_input):
         # nn_input is mXn where m is the number of samples
         # n is the number of neurons in each sample
-        print('original input', nn_input)
+        #print('original input', nn_input)
         # the one iteration forward function
         def sigmoid(i):
             if str(i.type()) != 'torch.DoubleTensor':
@@ -48,43 +50,43 @@ class NeuralNetwork:
         if str(nn_input.type()) != 'torch.DoubleTensor':
             raise TypeError('Input of forward is not DoubleTensor')
         si = [1, nn_input.size()[0]]
-        print('si', si)
+        #print('si', si)
 
         bias = torch.ones(si, dtype=torch.double)
-        print('bias', bias)
+        #print('bias', bias)
         operation_input = nn_input.t()
         # operation_input has nxm dim
         self.a[0] = nn_input.t()
-        print('a[0]', self.a[0])
+        #print('a[0]', self.a[0])
 
         for i in self.theta.keys():
-            print('i=',i)
-            print('a[{}]={}'.format(i, self.a[i]))
-            print('bias=',bias)
+         #   print('i=',i)
+          #  print('a[{}]={}'.format(i, self.a[i]))
+          #  print('bias=',bias)
             self.a[i] =  torch.cat((self.a[i], bias), 0)
-            print('cat input', self.a[i])
+          #  print('cat input', self.a[i])
             theta = torch.t(self.theta[i])
-            print('theta', theta)
+          #  print('theta', theta)
             self.z[i + 1] = torch.mm(theta, self.a[i])
-            print('z', self.z[i+1])
+          #  print('z', self.z[i+1])
             self.a[i + 1] = sigmoid(self.z[i + 1])
-            print('a', self.a[i+1])
+          #  print('a', self.a[i+1])
             bias = torch.ones([1, self.a[i].t().size()[0]], dtype=torch.double)
-            print('end bias', bias)
-        print('return from forward', self.a[self.L].t())
+          #  print('end bias', bias)
+        #print('return from forward', self.a[self.L].t())
         return self.a[self.L].t() 
 
 
     def backward(self, target, loss='MSE'):
         target = target.t()
-        print('target', target)
+        #print('target', target)
         if loss == 'MSE':
             # step 1 calculate the loss function
             self.total_loss = (self.a[self.L] - target).pow(2).sum() / 2 / len(target)
-            print('output activation:', self.a[self.L])
-            print('total loss', self.total_loss)
+          #  print('output activation:', self.a[self.L])
+          #  print('total loss', self.total_loss)
             delta = torch.mul((self.a[self.L] - target), torch.mul(self.a[self.L], (1 - self.a[self.L])))
-            print('delta', delta)
+          #  print('delta', delta)
             
             for i in range(self.L - 1, -1, -1):
                 if i != self.L - 1: 
@@ -94,10 +96,10 @@ class NeuralNetwork:
                 # from the layer before the output
                 self.dE_dTheta[i] = torch.mm(self.a[i], delta.t())
                 delta = torch.mul(torch.mm(self.theta[i], delta), torch.mul(self.a[i], (1 - self.a[i])))
-                print('dE_dTheta', self.dE_dTheta[i])
-                print('theta', self.theta[i])
-                print('delta', delta)
-                print('diff_a', torch.mul(self.a[i], (1 - self.a[i])))
+           #     print('dE_dTheta', self.dE_dTheta[i])
+           #     print('theta', self.theta[i])
+           #     print('delta', delta)
+           #     print('diff_a', torch.mul(self.a[i], (1 - self.a[i])))
         elif loss == 'CE':
             pass
 
@@ -106,6 +108,6 @@ class NeuralNetwork:
     
     def updateParams(self, rate):
         for i in range(len(self.theta)):
-            print('before update', self.theta[i])
+           # print('before update', self.theta[i])
             self.theta[i] = self.theta[i] - torch.mul(self.dE_dTheta[i], rate)
-            print('after update', self.theta[i])
+          #  print('after update', self.theta[i])

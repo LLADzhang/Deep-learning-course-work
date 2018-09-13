@@ -32,6 +32,8 @@ class AND:
                 self.and_nn.forward(dataset)
                 self.and_nn.backward(target)
                 self.and_nn.updateParams(1)
+            else:
+                break
             line, = plt.plot(i, self.and_nn.total_loss, 'r*')
         line.set_label("AND Gate")
         plt.xlabel('Iteration')

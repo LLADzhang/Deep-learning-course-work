@@ -79,7 +79,7 @@ class NeuralNetwork:
 
     def backward(self, target, loss='MSE'):
         target = target.t()
-        #print('target', target)
+        #print('target size', target.size())
         if loss == 'MSE':
             # step 1 calculate the loss function
             self.total_loss = (self.a[self.L] - target).pow(2).sum() / 2 / len(target)

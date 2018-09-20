@@ -69,7 +69,7 @@ class MyImg2Num:
                     if position == target[i]:
                         correct += 1
             # loss / number of batches
-            avg_loss = loss / (len(self.test_loader.dataset) / self.test_batch_size)
+            avg_loss = loss / len(self.test_loader.dataset) 
             accuracy = correct / len(self.test_loader.dataset)
             return avg_loss, accuracy
         acc_list = []

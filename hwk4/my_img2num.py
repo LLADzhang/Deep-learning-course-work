@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 class MyImg2Num:
     def __init__(self):
         self.train_batch_size = 60
-        self.epoch = 20
+        self.epoch = 5
         self.labels = 10
         self.rate = 0.1 
         self.input_size = 28 * 28
@@ -52,6 +52,7 @@ class MyImg2Num:
             # loss / number of batches
             avg_loss = loss / (len(self.train_loader.dataset) / self.train_batch_size)
             return avg_loss
+        
         def testing():
             loss = 0
             correct = 0

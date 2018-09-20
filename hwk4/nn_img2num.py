@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 class NNImg2Num:
     def __init__(self):
         self.train_batch_size = 60
-        self.epoch =20
+        self.epoch = 5
         self.labels = 10
         self.rate = 30 
         self.input_size = 28 * 28

@@ -5,13 +5,14 @@ import torch.nn as nn
 from torchvision import datasets, transforms
 from time import time
 from torch.autograd import Variable
+import matplotlib.pyplot as plt
 
 class NNImg2Num:
     def __init__(self):
         self.train_batch_size = 60
-        self.epoch = 20
+        self.epoch =2 
         self.labels = 10
-        self.rate = 0.1 
+        self.rate = 30 
         self.input_size = 28 * 28
         self.test_batch_size = 10 * self.train_batch_size
         self.test_loader = torch.utils.data.DataLoader(
@@ -30,18 +31,18 @@ class NNImg2Num:
         
         # input image is 28 * 28 so convert to 1D matrix
         # output labels are 10 [0 - 9]
-        self.nn = nn.Sequential(
+        self.model = nn.Sequential(
                 nn.Linear(self.input_size, 512), nn.Sigmoid(),
                 nn.Linear(512, 256), nn.Sigmoid(),
                 nn.Linear(256, 64), nn.Sigmoid(),
                 nn.Linear(64, self.labels), nn.Sigmoid(),
                 )
 
+        self.optimizer = torch.optim.SGD(self.model.parameters(), lr=self.rate)
+        self.loss_function = nn.MSELoss()
+    
     def train(self):
-        optimizer = torch.optim.SGD(self.nn.parameters(), lr=self.rate, momentum=0.9)
-        loss_function = nn.MSELoss()
         print('training')
-        
         def onehot_training(target, batch_size):
                 output = torch.zeros(batch_size, self.labels)
                 for i in range(batch_size):
@@ -50,32 +51,31 @@ class NNImg2Num:
 
         def training():
             loss = 0
+            self.model.train() # set to training mode
             for batch_id, (data, target) in enumerate(self.train_loader):
-                #print('batch {} out of {} batches'.format(batch_id, len(self.train_loader.dataset)/ self.train_batch_size))
-                #print(data.view(self.train_batch_size, self.input_size).type(torch.DoubleTensor).type())
-                #print(target.size())
                 # data.view change the dimension of input to use forward function
-                optimizer.zero_grad()
-                forward_pass_output = self.nn(data.view(self.train_batch_size, self.input_size))
+                self.optimizer.zero_grad()
+                forward_pass_output = self.model(data.view(self.train_batch_size, self.input_size))
                 onehot_target = onehot_training(target, self.train_batch_size)
                 #print(onehot_target.type())
-                cur_loss = loss_function(forward_pass_output, onehot_target)
+                cur_loss = self.loss_function(forward_pass_output, onehot_target)
+                loss += cur_loss.data
                 cur_loss.backward()
-                optimizer.step()
-                loss += cur_loss
+                self.optimizer.step()
             # loss / number of batches
             avg_loss = loss / (len(self.train_loader.dataset) / self.train_batch_size)
             return avg_loss
         
         def testing():
+            self.model.eval()
             loss = 0
             correct = 0
             for batch_id, (data, target) in enumerate(self.test_loader):
                 # data.view change the dimension of input to use forward function
-                forward_pass_output = self.nn(data.view(self.test_batch_size, self.input_size))
+                forward_pass_output = self.model(data.view(self.test_batch_size, self.input_size))
                 onehot_target = onehot_training(target, self.test_batch_size)
-                cur_loss = loss_function(forward_pass_output, onehot_target)
-                loss += cur_loss
+                cur_loss = self.loss_function(forward_pass_output, onehot_target)
+                loss += cur_loss.data
                 #print(forward_pass_output.size())
                 #print(onehot_target.size())
                 for i in range(self.test_batch_size):
@@ -87,16 +87,30 @@ class NNImg2Num:
             avg_loss = loss / (len(self.test_loader.dataset) / self.test_batch_size)
             accuracy = correct / len(self.test_loader.dataset)
             return avg_loss, accuracy
-
+        acc_list = []
+        train_loss_list = []
+        test_loss_list = []
+        speed = []
         for i in range(self.epoch):
+            s = time()
             train_loss = training()
+            e = time()
             test_loss,accuracy = testing()
-            print('Epoch {}, training_loss = {}, testing_loss = {}, accuracy = {}'.format(i, train_loss, test_loss, accuracy))
+            print('Epoch {}, training_loss = {}, testing_loss = {}, accuracy = {}, time = {}'.format(i, train_loss, test_loss, accuracy, e - s))
+            acc_list.append(accuracy)
+            train_loss_list.append(train_loss)
+            test_loss_list.append(test_loss)
+            speed.append(e-s)
 
-        
-
+        plt.plot(range(self.epoch), acc_list, 'r*', label='Accuracy')
+        plt.plot(range(self.epoch), train_loss_list, 'b-', label='Training Loss')
+        plt.plot(range(self.epoch), test_loss_list, 'y.', label='Test Loss')
+        plt.xlabel('Epoch')
+        plt.title('Library Neural Network Evaluation')
+        plt.savefig('nn_compare.png')
+        return speed
     def forward(self, img):
         
-        output = self.nn.forward(img.view(1, self.input_size))
+        output = self.model.forward(img.view(1, self.input_size))
         _, result = torch.max(output, 1)
         return result

@@ -2,11 +2,13 @@ from pprint import pprint as pp
 from neural_network import NeuralNetwork 
 import torch
 from torchvision import datasets, transforms
+from time import time
+import matplotlib.pyplot as plt
 
 class MyImg2Num:
     def __init__(self):
         self.train_batch_size = 60
-        self.epoch = 20
+        self.epoch = 2
         self.labels = 10
         self.rate = 0.1 
         self.input_size = 28 * 28
@@ -40,9 +42,6 @@ class MyImg2Num:
         def training():
             loss = 0
             for batch_id, (data, target) in enumerate(self.train_loader):
-                #print('batch {} out of {} batches'.format(batch_id, len(self.train_loader.dataset)/ self.train_batch_size))
-                #print(data.view(self.train_batch_size, self.input_size).type(torch.DoubleTensor).type())
-                #print(target.size())
                 # data.view change the dimension of input to use forward function
                 forward_pass_output = self.nn.forward(data.view(self.train_batch_size, self.input_size).type(torch.DoubleTensor))
                 onehot_target = onehot_training(target, self.train_batch_size).type(torch.DoubleTensor)
@@ -72,11 +71,28 @@ class MyImg2Num:
             avg_loss = loss / (len(self.test_loader.dataset) / self.test_batch_size)
             accuracy = correct / len(self.test_loader.dataset)
             return avg_loss, accuracy
+        acc_list = []
+        train_loss_list = []
+        test_loss_list = []
+        speed = []
 
         for i in range(self.epoch):
+            s = time()
             train_loss = training()
+            e = time()
             test_loss,accuracy = testing()
-            print('Epoch {}, training_loss = {}, testing_loss = {}, accuracy = {}'.format(i, train_loss, test_loss, accuracy))
+            print('Epoch {}, training_loss = {}, testing_loss = {}, accuracy = {}, time = {}'.format(i, train_loss, test_loss, accuracy, e - s))
+            acc_list.append(accuracy)
+            train_loss_list.append(train_loss)
+            test_loss_list.append(test_loss)
+            speed.append(e-s)
+
+        plt.plot(range(self.epoch), acc_list, 'r*', label='Accuracy')
+        plt.plot(range(self.epoch), train_loss_list, 'b-', label='Training Loss')
+        plt.plot(range(self.epoch), test_loss_list, 'y.', label='Test Loss')
+        plt.xlabel('Epoch')
+        plt.title('My Neural Network Evaluation')
+        plt.savefig('my_compare.png')
 
         
 

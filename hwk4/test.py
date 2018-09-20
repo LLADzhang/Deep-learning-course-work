@@ -28,7 +28,7 @@ plt.plot(range(30), my_train_loss, 'r*--', label='Training loss of my nn')
 plt.plot(range(30), nn_train_loss, 'b|--', label='Training loss of torch nn')
 
 plt.plot(range(30), my_test_loss, 'ro-.', label='Testing loss of my nn')
-plt.plot(range(30), nn_test_loss, 'n+-.', label='Testing loss of torch nn')
+plt.plot(range(30), nn_test_loss, 'b+-.', label='Testing loss of torch nn')
 plt.xlabel('Epoch')
 plt.ylabel('Loss')
 plt.savefig('loss.png')

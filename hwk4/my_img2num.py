@@ -95,7 +95,7 @@ class MyImg2Num:
         plt.title('My Neural Network Evaluation')
         plt.savefig('my_compare.png')
         plt.clf()
-
+        return speed
         
 
     def forward(self, img):

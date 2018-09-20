@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 class MyImg2Num:
     def __init__(self):
         self.train_batch_size = 60
-        self.epoch = 2
+        self.epoch = 20
         self.labels = 10
         self.rate = 0.1 
         self.input_size = 28 * 28
@@ -86,13 +86,14 @@ class MyImg2Num:
             train_loss_list.append(train_loss)
             test_loss_list.append(test_loss)
             speed.append(e-s)
-
-        plt.plot(range(self.epoch), acc_list, 'r*', label='Accuracy')
-        plt.plot(range(self.epoch), train_loss_list, 'b-', label='Training Loss')
-        plt.plot(range(self.epoch), test_loss_list, 'y.', label='Test Loss')
+        plt.plot(range(self.epoch), acc_list, 'r|--', label='Accuracy')
+        plt.plot(range(self.epoch), train_loss_list, 'b*--', label='Training Loss')
+        plt.plot(range(self.epoch), test_loss_list, 'yo--', label='Test Loss')
         plt.xlabel('Epoch')
+        plt.legend()
         plt.title('My Neural Network Evaluation')
         plt.savefig('my_compare.png')
+        plt.clf()
 
         
 

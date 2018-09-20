@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 class NNImg2Num:
     def __init__(self):
         self.train_batch_size = 60
-        self.epoch =2 
+        self.epoch =20
         self.labels = 10
         self.rate = 30 
         self.input_size = 28 * 28
@@ -102,12 +102,14 @@ class NNImg2Num:
             test_loss_list.append(test_loss)
             speed.append(e-s)
 
-        plt.plot(range(self.epoch), acc_list, 'r*', label='Accuracy')
-        plt.plot(range(self.epoch), train_loss_list, 'b-', label='Training Loss')
-        plt.plot(range(self.epoch), test_loss_list, 'y.', label='Test Loss')
+        plt.plot(range(self.epoch), acc_list, 'r|--', label='Accuracy')
+        plt.plot(range(self.epoch), train_loss_list, 'b*--', label='Training Loss')
+        plt.plot(range(self.epoch), test_loss_list, 'yo--', label='Test Loss')
         plt.xlabel('Epoch')
+        plt.legend()
         plt.title('Library Neural Network Evaluation')
         plt.savefig('nn_compare.png')
+        plt.clf()
         return speed
     def forward(self, img):
         

@@ -4,11 +4,11 @@ import torch
 from torchvision import datasets, transforms
 from time import time
 import matplotlib.pyplot as plt
-
+plt.ioff()
 class MyImg2Num:
     def __init__(self):
         self.train_batch_size = 60
-        self.epoch = 5
+        self.epoch = 30
         self.labels = 10
         self.rate = 0.1 
         self.input_size = 28 * 28
@@ -31,7 +31,7 @@ class MyImg2Num:
         # output labels are 10 [0 - 9]
         self.nn = NeuralNetwork([self.input_size, 512, 256, 64, self.labels])
 
-    def train(self):
+    def train(self, plot=False):
         print('training')
         def onehot_training(target, batch_size):
                 output = torch.zeros(batch_size, self.labels)
@@ -87,6 +87,16 @@ class MyImg2Num:
             train_loss_list.append(train_loss)
             test_loss_list.append(test_loss)
             speed.append(e-s)
+        if plot:
+            return speed, train_loss_list, test_loss_list, acc_list
+        
+
+    def forward(self, img):
+        
+        output = self.nn.forward(img.view(1, self.input_size))
+        _, result = torch.max(output, 1)
+        return result      
+        '''
         plt.plot(range(self.epoch), acc_list, 'r|--', label='Accuracy')
         plt.plot(range(self.epoch), train_loss_list, 'b*--', label='Training Loss')
         plt.plot(range(self.epoch), test_loss_list, 'yo--', label='Test Loss')
@@ -95,11 +105,5 @@ class MyImg2Num:
         plt.title('My Neural Network Evaluation')
         plt.savefig('my_compare.png')
         plt.clf()
-        return speed
+        '''
         
-
-    def forward(self, img):
-        
-        output = self.nn.forward(img.view(1, self.input_size))
-        _, result = torch.max(output, 1)
-        return result

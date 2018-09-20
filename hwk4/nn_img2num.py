@@ -6,11 +6,12 @@ from torchvision import datasets, transforms
 from time import time
 from torch.autograd import Variable
 import matplotlib.pyplot as plt
-
+plt.ioff()
 class NNImg2Num:
+
     def __init__(self):
         self.train_batch_size = 60
-        self.epoch = 5
+        self.epoch = 30
         self.labels = 10
         self.rate = 30 
         self.input_size = 28 * 28
@@ -41,7 +42,13 @@ class NNImg2Num:
         self.optimizer = torch.optim.SGD(self.model.parameters(), lr=self.rate)
         self.loss_function = nn.MSELoss()
     
-    def train(self):
+    def forward(self, img):
+        
+        output = self.model.forward(img.view(1, self.input_size))
+        _, result = torch.max(output, 1)
+        return result
+
+    def train(self, plot=False):
         print('training')
         def onehot_training(target, batch_size):
                 output = torch.zeros(batch_size, self.labels)
@@ -101,7 +108,10 @@ class NNImg2Num:
             train_loss_list.append(train_loss)
             test_loss_list.append(test_loss)
             speed.append(e-s)
+        if plot == True:
+            return speed, train_loss_list, test_loss_list, acc_list
 
+'''
         plt.plot(range(self.epoch), acc_list, 'r|--', label='Accuracy')
         plt.plot(range(self.epoch), train_loss_list, 'b*--', label='Training Loss')
         plt.plot(range(self.epoch), test_loss_list, 'yo--', label='Test Loss')
@@ -110,9 +120,5 @@ class NNImg2Num:
         plt.title('Library Neural Network Evaluation')
         plt.savefig('nn_compare.png')
         plt.clf()
-        return speed
-    def forward(self, img):
-        
-        output = self.model.forward(img.view(1, self.input_size))
-        _, result = torch.max(output, 1)
-        return result
+    '''
+    

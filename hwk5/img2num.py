@@ -5,11 +5,12 @@ import torch.nn.functional as F
 from torchvision import datasets, transforms
 from time import time
 from torch.autograd import Variable
-import matplotlib.pyplot as plt
+
+
 class LeNet(nn.Module):
     def __init__(self):
         super(LeNet, self).__init__()
-        self.conv1 = nn.Conv2d(1, 6, 5, padding=2)
+        self.conv1 = nn.Conv2d(1, 6, 5, padding=2) 
         self.conv2 = nn.Conv2d(6, 16, 5)
         self.fc1 = nn.Linear(5*5*16, 120)
         self.fc2 = nn.Linear(120, 84)
@@ -26,31 +27,32 @@ class LeNet(nn.Module):
         x = self.fc3(x)
         return x
     
-class NNImg2Num:
+class img2num:
 
     def __init__(self):
         self.train_batch_size = 60
         self.epoch = 30
         self.labels = 10
-        self.rate = 30 
+        self.rate = 1 
         self.input_size = 28 * 28
-        self.test_batch_size = 10 * self.train_batch_size
+        self.test_batch_size = 1000
         self.test_loader = torch.utils.data.DataLoader(
             datasets.MNIST('./mnist', 
-                train=True, 
+                train=False, 
                 download=True, 
                 transform=transforms.Compose([transforms.ToTensor()])),
-                batch_size=self.test_batch_size, shuffle=True)
+                batch_size=self.test_batch_size, shuffle=True, num_workers=10)
 
         self.train_loader = torch.utils.data.DataLoader(
             datasets.MNIST('./mnist', 
                 train=True, 
                 download=True, 
                 transform=transforms.Compose([transforms.ToTensor()])),
-                batch_size=self.train_batch_size, shuffle=True)
+                batch_size=self.train_batch_size, shuffle=True, num_workers=10)
         
         # input image is 28 * 28 so convert to 1D matrix
         # output labels are 10 [0 - 9]
+        torch.manual_seed(1)
         self.model = LeNet()
         self.optimizer = torch.optim.SGD(self.model.parameters(), lr=self.rate)
         self.loss_function = nn.MSELoss()
@@ -77,12 +79,12 @@ class NNImg2Num:
             self.model.train() # set to training mode
             for batch_id, (data, target) in enumerate(self.train_loader):
                 # data.view change the dimension of input to use forward function
-                self.optimizer.zero_grad()
                 forward_pass_output = self.model(data)
                 onehot_target = onehot_training(target, self.train_batch_size)
                 #print(onehot_target.type())
                 cur_loss = self.loss_function(forward_pass_output, onehot_target)
                 loss += cur_loss.data
+                self.optimizer.zero_grad()
                 cur_loss.backward()
                 self.optimizer.step()
             # loss / number of batches

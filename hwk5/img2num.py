@@ -171,7 +171,7 @@ class img2num:
             save(state,better) 
      
         if plot == True:
-            return speed, train_loss_list, test_loss_list, acc_list
+            return self.time, self.training_loss, self.testing_loss, self.testing_acc
 
 '''
         plt.plot(range(self.epoch), acc_list, 'r|--', label='Accuracy')

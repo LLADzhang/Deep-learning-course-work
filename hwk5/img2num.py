@@ -1,6 +1,7 @@
 from pprint import pprint as pp
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torchvision import datasets, transforms
 from time import time
 from torch.autograd import Variable
@@ -77,7 +78,7 @@ class NNImg2Num:
             for batch_id, (data, target) in enumerate(self.train_loader):
                 # data.view change the dimension of input to use forward function
                 self.optimizer.zero_grad()
-                forward_pass_output = self.model(data.view(self.train_batch_size, self.input_size))
+                forward_pass_output = self.model(data)
                 onehot_target = onehot_training(target, self.train_batch_size)
                 #print(onehot_target.type())
                 cur_loss = self.loss_function(forward_pass_output, onehot_target)
@@ -94,7 +95,7 @@ class NNImg2Num:
             correct = 0
             for batch_id, (data, target) in enumerate(self.test_loader):
                 # data.view change the dimension of input to use forward function
-                forward_pass_output = self.model(data.view(self.test_batch_size, self.input_size))
+                forward_pass_output = self.model(data)
                 onehot_target = onehot_training(target, self.test_batch_size)
                 cur_loss = self.loss_function(forward_pass_output, onehot_target)
                 loss += cur_loss.data

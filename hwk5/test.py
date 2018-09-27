@@ -1,13 +1,14 @@
 import matplotlib.pyplot as plt
 from img2num import img2num
 from img2obj import img2obj
-
+print('img2Num testing')
 img = img2num()
-time, nn_train_loss, nn_test_loss, nn_accuracy = img.train(True)
-print(nn_time)
+time, train_loss, test_loss, accuracy = img.train(True)
+print(time, train_loss, test_loss, accuracy)
+print('img2obj testing')
 img = img2obj()
-time, nn_train_loss, nn_test_loss, nn_accuracy = img.train(True)
-print(nn_time)
+time, train_loss,test_loss, accuracy = img.train(True)
+print(time, train_loss, test_loss, accuracy)
 '''
 data = [my_time, nn_time]
 plt.boxplot(data)

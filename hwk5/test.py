@@ -9,6 +9,7 @@ print('img2obj testing')
 img = img2obj()
 time, train_loss,test_loss, accuracy = img.train(True)
 print(time, train_loss, test_loss, accuracy)
+img.cam(0)
 '''
 data = [my_time, nn_time]
 plt.boxplot(data)

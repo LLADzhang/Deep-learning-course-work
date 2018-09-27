@@ -8,6 +8,7 @@ import torch.nn.functional as F
 from torchvision import datasets, transforms
 from time import time, sleep
 from torch.autograd import Variable
+import cv2
 
 class LeNet(nn.Module):
     def __init__(self):
@@ -60,7 +61,7 @@ class img2obj:
                 'apples', 'mushrooms', 'oranges', 'pears', 'sweet peppers', 
                 'clock', 'computer keyboard', 'lamp', 'telephone', 'television',
                 'bed', 'chair', 'couch', 'table', 'wardrobe',
-                'bee', 'beetle', 'butterfly', 'caterpillar', 'cockroach', 
+                'bee', 'beetle', 'butterfly', 'categoryrpillar', 'cockroach', 
                 'bear', 'leopard', 'lion', 'tiger', 'wolf', 
                 'bridge', 'castle', 'house', 'road', 'skyscraper', 
                 'cloud', 'forest', 'mountain', 'plain', 'sea',
@@ -182,24 +183,64 @@ class img2obj:
                     'time': self.time
                     }
             save(state,better) 
-        '''
-        for i in range(0, 10):
-            label = self.classes[self.train_loader.dataset[i][1]]
-            self.view(self.train_loader.dataset[i][0])
-            print("actual label is", label)
-            sleep(3)
-        '''
+        
+        label = self.classes[self.train_loader.dataset[20][1]]
+        print("actual label is", label)
+        self.view(self.train_loader.dataset[20][0])
+        
         if plot == True:
             return self.time, self.training_loss, self.testing_loss, self.testing_acc
 
     def view(self, img):
-        cate = self.forward(img)
-
+        category = self.forward(img)
+        print('Prediction is', category)
         img = img.type(torch.FloatTensor) / 2 + 0.5
-        img_numpy = np.transpose(img.numpy, (1,2,0))
+        img_numpy = np.transpose(img.numpy(), (1,2,0))
 
-        cv2.namedWindow(cate, cv2.WINDOW_NORMAL)
-        cv2.imshow(cate, img_numpy)
+        cv2.namedWindow(category, cv2.WINDOW_NORMAL)
+        cv2.resizeWindow(category, 640, 480)
+        cv2.imshow(category, img_numpy)
         cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+    def cam(self, idx = 0):
+        
+        def prepare(img_origin):
+            img_scaled = cv2.resize(img_origin, (32, 32), interpolation=cv2.INTER_LINEAR)
+            # Convert to Tensor and Normalize
+            prepare = transforms.Compose([transforms.ToTensor(), transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])])
+            
+            return prepare(img_scaled)
+
+        cam = cv2.VideoCapture(idx)
+        cam.set(3, 1280)
+        cam.set(4, 720)
+        cv2.namedWindow("test")
+        img_counter = 0
+        print('Press e/E to exit, c/C to capture a picture\n')
+        while True:
+            ret, frame = cam.read()
+            if not ret:
+                break
+            norm_img_tensor = prepare(frame)
+            predicted_category = self.forward(norm_img_tensor)
+            print(predicted_category)
+            cv2.putText(frame, predicted_category, (10,500), cv2.FONT_HERSHEY_SIMPLEX, 4, (255, 255, 255), 5, cv2.LINE_AA)
+            cv2.imshow('Capturing', frame)
+
+            k = cv2.waitKey(1) & 0xFF
+            if k == ord('e'):
+                # e pressed
+                print("E hit, closing...")
+                break
+            elif k == ord('c'):
+                # c pressed
+                img_name = "opencv_frame_{}.png".format(img_counter)
+                cv2.imwrite(img_name, frame)
+                print("{} written!".format(img_name))
+                img_counter += 1
+            
+        cam.release()
+
         cv2.destroyAllWindows()
 

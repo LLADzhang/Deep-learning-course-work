@@ -1,5 +1,4 @@
 from pprint import pprint as pp
-from neural_network import NeuralNetwork 
 import torch
 import torch.nn as nn
 from torchvision import datasets, transforms
@@ -26,9 +25,6 @@ class LeNet(nn.Module):
         x = self.fc3(x)
         return x
     
-    def name(self):
-        return "LeNet"
-
 class NNImg2Num:
 
     def __init__(self):
@@ -54,19 +50,16 @@ class NNImg2Num:
         
         # input image is 28 * 28 so convert to 1D matrix
         # output labels are 10 [0 - 9]
-        self.model = nn.Sequential(
-                nn.Linear(self.input_size, 512), nn.Sigmoid(),
-                nn.Linear(512, 256), nn.Sigmoid(),
-                nn.Linear(256, 64), nn.Sigmoid(),
-                nn.Linear(64, self.labels), nn.Sigmoid(),
-                )
-
+        self.model = LeNet()
         self.optimizer = torch.optim.SGD(self.model.parameters(), lr=self.rate)
         self.loss_function = nn.MSELoss()
     
+        # img is 28*28 bytetensor 
     def forward(self, img):
-        
-        output = self.model.forward(img.view(1, self.input_size))
+        _3d = torch.unsqueeze(img, 0)
+        _4d = torch.unsqueeze(_3d, 0)
+        self.model.eval()
+        output = self.model(_4d)
         _, result = torch.max(output, 1)
         return result
 

@@ -34,8 +34,8 @@ class img2obj:
 
     def __init__(self):
         self.train_batch_size = 200 
-        self.epoch = 200
-        self.rate = 0.001
+        self.epoch = 50 
+        self.rate = 1
         self.input_size = 32 * 32 * 3 #RGB 3 channels of data
         self.test_batch_size = 1000
         normalize = transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
@@ -79,7 +79,7 @@ class img2obj:
         self.labels = len(self.classes) 
         # input image is 3*32 * 32 so convert to 1D matrix
         self.model = LeNet()
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.rate, weight_decay=0.0005)
+        self.optimizer = torch.optim.Adadelta(self.model.parameters(), lr=self.rate, weight_decay=0.0005)
         self.loss_function = nn.CrossEntropyLoss()
         self.check_point_file = 'img2obj_checkpoint.tar'
 
@@ -157,12 +157,19 @@ class img2obj:
             avg_loss = loss / (len(self.test_loader.dataset) / self.test_batch_size)
             accuracy = correct / len(self.test_loader.dataset)
             return avg_loss, accuracy
+        last_acc = 0 
         for i in range(self.start + 1, self.epoch + 1):
             s = time()
             train_loss = training()
             e = time()
-            test_loss,accuracy = testing()
+            test_loss, accuracy = testing()
             print('Epoch {}, training_loss = {}, testing_loss = {}, accuracy = {}, time = {}'.format(i, train_loss, test_loss, accuracy, e - s))
+
+            if last_acc > accuracy:
+                for g in self.optimizer.param_groups:
+                    g['lr'] = g['lr']/10
+                print('learning rate changed to', g['lr'])
+            last_acc = accuracy
             self.testing_acc.append(accuracy)
             self.training_loss.append(train_loss)
             self.testing_loss.append(test_loss)
@@ -184,9 +191,9 @@ class img2obj:
                     }
             save(state,better) 
         
-        label = self.classes[self.train_loader.dataset[20][1]]
-        print("actual label is", label)
-        self.view(self.train_loader.dataset[20][0])
+        #label = self.classes[self.train_loader.dataset[20][1]]
+        #print("actual label is", label)
+        #self.view(self.train_loader.dataset[20][0])
         
         if plot == True:
             return self.time, self.training_loss, self.testing_loss, self.testing_acc

@@ -2,13 +2,13 @@ import matplotlib.pyplot as plt
 from img2num import img2num
 from img2obj import img2obj
 
+img = img2num()
+time, nn_train_loss, nn_test_loss, nn_accuracy = img.train(True)
+print(nn_time)
 img = img2obj()
 time, nn_train_loss, nn_test_loss, nn_accuracy = img.train(True)
 print(nn_time)
 '''
-img = img2num()
-time, nn_train_loss, nn_test_loss, nn_accuracy = img.train(True)
-print(nn_time)
 data = [my_time, nn_time]
 plt.boxplot(data)
 plt.xticks(range(1, 3), ['MyImg2Num', 'NNImg2Num'])

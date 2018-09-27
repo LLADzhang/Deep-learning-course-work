@@ -1,4 +1,5 @@
-from pprint import pprint as pp
+import os
+import shutil
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -56,7 +57,32 @@ class img2num:
         self.model = LeNet()
         self.optimizer = torch.optim.SGD(self.model.parameters(), lr=self.rate)
         self.loss_function = nn.MSELoss()
-    
+
+        self.check_point_file = 'img2num_checkpoint.tar'
+
+        if os.path.isfile(self.check_point_file):
+            cp = torch.load(self.check_point_file)
+            self.start = cp['epoch']
+            self.best_acc = cp['best_acc']
+
+            print('checkpoint found at epoch', self.start)
+            self.model.load_state_dict(cp['model'])
+            self.optimizer.load_state_dict(cp['optimizer'])
+
+            self.training_loss = cp['training_loss']
+            self.testing_loss = cp['testing_loss']
+            self.testing_acc = cp['testing_acc']
+            self.time = cp['time']
+        else:
+            self.start = 0
+            self.best_acc = 0 
+
+            self.training_loss = []
+            self.testing_loss = []
+            self.testing_acc = []
+            self.time = []
+
+  
         # img is 28*28 bytetensor 
     def forward(self, img):
         _3d = torch.unsqueeze(img, 0)
@@ -68,6 +94,11 @@ class img2num:
 
     def train(self, plot=False):
         print('training')
+        def save(state, better, f=self.check_point_file):
+            torch.save(state, f)
+            if better:
+                shutil.copyfile(f, 'img2num_best.tar')
+
         def onehot_training(target, batch_size):
                 output = torch.zeros(batch_size, self.labels)
                 for i in range(batch_size):
@@ -112,20 +143,33 @@ class img2num:
             avg_loss = loss / (len(self.test_loader.dataset) / self.test_batch_size)
             accuracy = correct / len(self.test_loader.dataset)
             return avg_loss, accuracy
-        acc_list = []
-        train_loss_list = []
-        test_loss_list = []
-        speed = []
-        for i in range(self.epoch):
+        for i in range(self.start + 1, self.epoch + 1):
             s = time()
             train_loss = training()
             e = time()
             test_loss,accuracy = testing()
             print('Epoch {}, training_loss = {}, testing_loss = {}, accuracy = {}, time = {}'.format(i, train_loss, test_loss, accuracy, e - s))
-            acc_list.append(accuracy)
-            train_loss_list.append(train_loss)
-            test_loss_list.append(test_loss)
-            speed.append(e-s)
+            self.testing_acc.append(accuracy)
+            self.training_loss.append(train_loss)
+            self.testing_loss.append(test_loss)
+            self.time.append(e-s)
+            better = False
+            if accuracy > self.best_acc:
+                better = True
+            self.best_acc = max(self.best_acc, accuracy)
+            print('Save checkpoint at', i)
+            state = {
+                    'epoch': i,
+                    'best_acc': self.best_acc,
+                    'model': self.model.state_dict(),
+                    'optimizer': self.optimizer.state_dict(),
+                    'training_loss': self.training_loss,
+                    'testing_loss': self.testing_loss,
+                    'testing_acc': self.testing_acc,
+                    'time': self.time
+                    }
+            save(state,better) 
+     
         if plot == True:
             return speed, train_loss_list, test_loss_list, acc_list
 

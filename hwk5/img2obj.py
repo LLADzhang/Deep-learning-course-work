@@ -182,12 +182,13 @@ class img2obj:
                     'time': self.time
                     }
             save(state,better) 
+        '''
         for i in range(0, 10):
             label = self.classes[self.train_loader.dataset[i][1]]
             self.view(self.train_loader.dataset[i][0])
             print("actual label is", label)
             sleep(3)
-
+        '''
         if plot == True:
             return self.time, self.training_loss, self.testing_loss, self.testing_acc
 

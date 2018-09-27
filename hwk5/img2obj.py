@@ -33,7 +33,7 @@ class img2obj:
 
     def __init__(self):
         self.train_batch_size = 200 
-        self.epoch = 30
+        self.epoch = 50
         self.rate = 0.001 
         self.input_size = 32 * 32 * 3 #RGB 3 channels of data
         self.test_batch_size = 1000

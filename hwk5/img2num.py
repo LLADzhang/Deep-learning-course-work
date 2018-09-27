@@ -32,7 +32,7 @@ class img2num:
 
     def __init__(self):
         self.train_batch_size = 60
-        self.epoch = 30
+        self.epoch = 50
         self.labels = 10
         self.rate = 1 
         self.input_size = 28 * 28

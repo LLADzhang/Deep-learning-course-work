@@ -232,7 +232,6 @@ class img2obj:
             norm_img_tensor = prepare(frame)
             predicted_category = self.forward(norm_img_tensor)
             print(predicted_category)
-            predicted_category = 'cups'
             cv2.putText(frame, predicted_category, (10,500), cv2.FONT_HERSHEY_SIMPLEX, 4, (255, 255, 255), 5, cv2.LINE_AA)
             cv2.imshow('Capturing', frame)
 

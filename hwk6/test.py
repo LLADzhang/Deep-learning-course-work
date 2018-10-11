@@ -1,17 +1,20 @@
-from train import AlexNet
-import cv2
 import argparse
+import cv2
+import os
+import torch
+from torchvision import transforms
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--model', type=str, help='Directory to the saved model')
 
 args = parser.parse_args()
 
+from train import AlexNet
 class TestClass:
     def __init__(self):
         self.model = AlexNet()
         # load from model
-        self.check_point_file = os.path.join(args.save, 'alex_checkpoint.tar')
+        self.check_point_file = os.path.join(args.model, 'alex_checkpoint.tar')
         if not os.path.exists(os.path.dirname(self.check_point_file)):
             try:
                 os.makedirs(os.path.dirname(self.check_point_file))
@@ -32,7 +35,7 @@ class TestClass:
             exit()
 
     def forward(self, img):
-        _4d = troch.unsqueeze(img.type(torch.FloatTensor), 0)
+        _4d = torch.unsqueeze(img.type(torch.FloatTensor), 0)
         self.model.eval()
         output = self.model(_4d)
         _, result = torch.max(output, 1)
@@ -53,7 +56,7 @@ class TestClass:
                     transforms.ToTensor(),
                     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
                 
-                return prepare(image)
+                return transformer(img_origin)
 
             cam = cv2.VideoCapture(idx)
             cam.set(3, 1280)
@@ -85,5 +88,7 @@ class TestClass:
                 
             cam.release()
             cv2.destroyAllWindows()
-md = TestModel()
-md.cam()
+
+if __name__ == "__main__":
+    md = TestClass()
+    md.cam()

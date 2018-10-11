@@ -1,9 +1,13 @@
 import argparse
+import matplotlib.pyplot as plt
 import os
+import shutil
+import torch
 import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
 import torch.nn.functional as F
-from torchvision import datasets, transforms
+from torchvision import datasets, models, transforms
+from time import time
 
 __all__ = ['AlexNet', 'alexnet']
 
@@ -13,12 +17,11 @@ model_urls = {
 }
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--data', type=str, help='path to the tiny image set')
-parser.add_argument('--save', type=str, help='path to directory to save trained model after completion of training')
+parser.add_argument('--data', type=str, help='Directory to thee tiny image set')
+parser.add_argument('--save', type=str, help='Directory to save trained model after completion of training')
 # parse_args returns an object with attributes as defined in the add_argument. The ArgumentParser parses command line
 # arguments from sys.argv, converts to appropriate type and takes defined action (default: 'store')
 args = parser.parse_args()
-
 
 
 class AlexNet(nn.Module):
@@ -55,31 +58,48 @@ class AlexNet(nn.Module):
         x = self.features(x)
         x = x.view(x.size(0), -1)
         x = self.classifier(x)
-        x = F.softmax(x)
         return x
-
-
-def alexnet(pretrained=False, **kwargs):
-    """
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
-    """
-    model = AlexNet(**kwargs)
-    if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['alexnet']))
-    return model
 
 
 class Model:
     def __init__(self):
-        self.train_batch_size = 60
+        self.train_batch_size =  100
         self.epoch = 50
-        self.labels = 10
-        self.rate = 1 
-        self.input_size = 28 * 28
-        self.val_batch_size = 1000
-	# load data: from https://github.com/pytorch/examples/blob/master/imagenet/main.py
+        self.rate = 0.1 
+        self.val_batch_size = 10
+        def create_val_folder():
+            path = os.path.join(args.data, 'val/images')  # path where validation data is present now
+            filename = os.path.join(args.data, 'val/val_annotations.txt')  # file where image2class mapping is present
+            fp = open(filename, "r")  # open file in read mode
+            data = fp.readlines()  # read line by line
+
+            # Create a dictionary with image names as key and corresponding classes as values
+            val_img_dict = {}
+            for line in data:
+                words = line.split("\t")
+                val_img_dict[words[0]] = words[1]
+            fp.close()
+
+            # Create folder if not present, and move image into proper folder
+            for img, folder in val_img_dict.items():
+                newpath = (os.path.join(path, folder))
+                if not os.path.exists(newpath):  # check if folder exists
+                    os.makedirs(newpath)
+
+                if os.path.exists(os.path.join(path, img)):  # Check if image exists in default directory
+                    os.rename(os.path.join(path, img), os.path.join(newpath, img))
+        create_val_folder()
+	
+        # load data: from https://github.com/pytorch/examples/blob/master/imagenet/main.py
+
         traindir = os.path.join(args.data, 'train')
-        valdir = os.path.join(args.data, 'val')
+        if not os.path.exists(traindir):
+            os.makedirs(traindir)
+        valdir = os.path.join(args.data, 'val/images')
+
+        if not os.path.exists(valdir):
+            os.makedirs(valdir)
+        
         normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         train_dataset = datasets.ImageFolder(
 	    traindir,
@@ -90,8 +110,8 @@ class Model:
 		normalize,
         ]))
         
-        self.train_loader = torch.utils.data.DataLoader(
-            train_dataset, batch_size = self.train_batch_size, shuffle=True, num_workers = 5)        
+        self.train_loader = torch.utils.data.DataLoader(train_dataset, batch_size = self.train_batch_size, shuffle=True, num_workers = 5)        
+        
         val_dataset = datasets.ImageFolder(
 	    valdir,
             transforms.Compose([
@@ -100,8 +120,11 @@ class Model:
                 transforms.ToTensor(),
                 normalize, 
         ]))
+        
+        self.val_loader = torch.utils.data.DataLoader(
+            val_dataset, batch_size = self.val_batch_size, shuffle=True, num_workers = 5)
         def get_tiny_classes(class_list):
-            fp = open(os.path.join(args.data, 'classes.txt'))
+            fp = open(os.path.join(args.data, 'words.txt'))
             whole_class_dict = {}
             for line in fp.readlines():
                 fields = line.split("\t")
@@ -118,13 +141,9 @@ class Model:
             return tiny_class
        
         self.classes = train_dataset.classes
-        self.tiny_classes = get_classes(self.classes)
+        self.tiny_classes = get_tiny_classes(self.classes)
 	    
-        self.val_loader = torch.utils.data.DataLoader(
-            val_dataset, batch_size = self.val_batch_size, shuffle=True, num_workers = 5)
-        pretrained_model = alexnet(True)
-        # input image is 28 * 28 so convert to 1D matrix
-        # output labels are 10 [0 - 9]
+        pretrained_model = models.alexnet(pretrained=True)
         torch.manual_seed(1)
         self.model = AlexNet()
         # To copy parameters
@@ -136,15 +155,20 @@ class Model:
                          i.bias.data = j.bias.data
         for p in self.model.parameters():
             p.requires_grad = False
-        for p in self.model.classfier[6].parameters():
+        for p in self.model.classifier[6].parameters():
             p.requires_grad = True
 
 
-        self.optimizer = torch.optim.Adam(self.model.classfier[6].parameters(), lr=self.rate)
+        self.optimizer = torch.optim.Adam(self.model.classifier[6].parameters(), lr=self.rate)
         self.loss_function = nn.CrossEntropyLoss()
 
-        self.check_point_file = 'alex_checkpoint.tar'
-
+        self.check_point_file = os.path.join(args.save, 'alex_checkpoint.tar')
+        if not os.path.exists(os.path.dirname(self.check_point_file)):
+            try:
+                os.makedirs(os.path.dirname(self.check_point_file))
+            except OSError as exc: # Guard against race condition
+                if exc.errno != errno.EEXIST:
+                    raise
         if os.path.isfile(self.check_point_file):
             cp = torch.load(self.check_point_file)
             self.start = cp['epoch']
@@ -168,11 +192,11 @@ class Model:
             self.testing_loss = []
             self.testing_acc = []
             self.time = []
-    def train(self):
+    def train(self, plot=False):
         def save(state, better, f=self.check_point_file):
             torch.save(state, f)
             if better:
-                shutil.copyfile(f, 'img2num_best.tar')
+                shutil.copyfile(f, os.path.join(args.save, 'alexnet_best.tar'))
         def training():
             correct = 0
             loss = 0
@@ -180,9 +204,8 @@ class Model:
             for batch_id, (data, target) in enumerate(self.train_loader):
                 # data.view change the dimension of input to use forward function
                 forward_pass_output = self.model(data)
-                onehot_target = onehot_training(target, self.train_batch_size)
                 #print(onehot_target.type())
-                cur_loss = self.loss_function(forward_pass_output, onehot_target)
+                cur_loss = self.loss_function(forward_pass_output, target)
                 loss += cur_loss.data
                 self.optimizer.zero_grad()
                 cur_loss.backward()
@@ -202,7 +225,7 @@ class Model:
             self.model.eval()
             loss = 0
             correct = 0
-            for batch_id, (data, target) in enumerate(self.test_loader):
+            for batch_id, (data, target) in enumerate(self.val_loader):
                 # data.view change the dimension of input to use forward function
                 forward_pass_output = self.model(data)
                 cur_loss = self.loss_function(forward_pass_output, target)
@@ -210,21 +233,23 @@ class Model:
                 #print(forward_pass_output.size())
                 #print(onehot_target.size())
                 val, position = torch.max(forward_pass_output.data, 1)
-                for i in range(self.test_batch_size):
+                for i in range(self.val_batch_size):
                  #   print('prediction = {}, actual = {}'.format(int(position), target[i]))
-                    if position == target[i]:
+                    if position[i] == target[i]:
                         correct += 1
             # loss / number of batches
-            avg_loss = loss / (len(self.test_loader.dataset) / self.test_batch_size)
-            accuracy = correct / len(self.test_loader.dataset)
+            avg_loss = loss / (len(self.val_loader.dataset) / self.val_batch_size)
+            accuracy = correct / len(self.val_loader.dataset)
             return avg_loss, accuracy
 
         for i in range(self.start + 1, self.epoch + 1):
+            print('Epoch {}'.format(i))
             s = time()
+            print('Training\n')
             train_loss, train_accuracy = training()
             e = time()
+            print('Training Done. Testing....\n')
             test_loss, test_accuracy = testing()
-            print('Epoch {}, training_loss = {}, testing_loss = {}, accuracy = {}, time = {}'.format(i, train_loss, test_loss, accuracy, e - s))
             self.testing_acc.append(test_accuracy)
             self.training_acc.append(train_accuracy)
             self.training_loss.append(train_loss)
@@ -234,7 +259,8 @@ class Model:
             if test_accuracy > self.best_acc:
                 better = True
             self.best_acc = max(self.best_acc, test_accuracy)
-            print('Save checkpoint at', i)
+            print('training_loss = {}, testing_loss = {}, training accuracy = {}, testing accuracy = {}, current best test accuracy = {}, time = {}, better = {}'.format(train_loss, test_loss, train_accuracy, test_accuracy, self.best_acc, e - s, better))
+            print('Saved checkpoint at', i)
             state = {
                     'epoch': i,
                     'best_acc': self.best_acc,
@@ -247,10 +273,40 @@ class Model:
                     'time': self.time
                     }
             save(state,better) 
-     
         if plot == True:
-            return self.time, self.training_loss, self.testing_loss, self.testing_acc
+            return self.time, self.training_loss, self.testing_loss, self.training_acc, self.testing_acc
+
+
+def graph(time, train_loss, test_loss, train_accuracy, test_accuracy, name):
+
+    plt.plot(time, 'k*:')
+    plt.ylabel('Running Time in Seconds')
+    plt.legend()
+    plt.xlabel('Epoch')
+    plt.title("Running time of " + name)
+    plt.savefig(name+'_time.png')
+    plt.clf()
+
+    plt.plot(range(len(train_accuracy)), train_accuracy, 'r*--', label='Training Accuracy')
+    plt.plot(range(len(test_accuracy)), test_accuracy, 'b.--', label='Testing Accuracy')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
+    plt.title("Accuracy of " + name)
+    plt.legend()
+    plt.savefig(name + '_acc.png')
+    plt.clf()
+
+    plt.plot(range(len(train_loss)), train_loss, 'r*--', label='Training loss')
+    plt.plot(range(len(test_loss)), test_loss, 'bo-.', label='Testing loss')
+    plt.xlabel('Epoch')
+    plt.legend()
+    plt.title("Loss of "+name)
+    plt.ylabel('Loss')
+    plt.savefig(name+'_loss.png')
+    plt.clf()
+
 
 if __name__ == "__main__":
     m = Model()
-    m.train()
+    time, train_loss, test_loss, train_accuracy, test_accuracy = m.train(True)
+    graph(time, train_loss, test_loss, train_accuracy, test_accuracy,  'Tiny Image')

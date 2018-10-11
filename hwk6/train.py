@@ -9,19 +9,6 @@ import torch.nn.functional as F
 from torchvision import datasets, models, transforms
 from time import time
 
-__all__ = ['AlexNet', 'alexnet']
-
-
-model_urls = {
-    'alexnet': 'https://download.pytorch.org/models/alexnet-owt-4df8aa71.pth',
-}
-
-parser = argparse.ArgumentParser()
-parser.add_argument('--data', type=str, help='Directory to thee tiny image set')
-parser.add_argument('--save', type=str, help='Directory to save trained model after completion of training')
-# parse_args returns an object with attributes as defined in the add_argument. The ArgumentParser parses command line
-# arguments from sys.argv, converts to appropriate type and takes defined action (default: 'store')
-args = parser.parse_args()
 
 class AlexNet(nn.Module):
     def __init__(self, num_classes=200):
@@ -58,9 +45,14 @@ class AlexNet(nn.Module):
         x = self.classifier(x)
         return x
 
-
 class Model:
     def __init__(self):
+        parser = argparse.ArgumentParser()
+        parser.add_argument('--data', type=str, help='Directory to thee tiny image set')
+        parser.add_argument('--save', type=str, help='Directory to save trained model after completion of training')
+        args = parser.parse_args()
+
+
         self.train_batch_size =  100
         self.epoch = 51
         self.rate = 0.1 

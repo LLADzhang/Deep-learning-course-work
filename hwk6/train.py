@@ -302,6 +302,4 @@ def graph(time, train_loss, test_loss, train_accuracy, test_accuracy, name):
 if __name__ == "__main__":
     m = Model()
     time, train_loss, test_loss, train_accuracy, test_accuracy = m.train(True)
-    train_loss.reverse()
-    test_loss.reverse()
     graph(time, train_loss, test_loss, train_accuracy, test_accuracy,  'Tiny Image')

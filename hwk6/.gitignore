@@ -1,2 +1,4 @@
 cifar/
+model/
+tiny-imagenet-200/
 mnist/

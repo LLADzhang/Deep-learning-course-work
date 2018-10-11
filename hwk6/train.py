@@ -23,9 +23,7 @@ parser.add_argument('--save', type=str, help='Directory to save trained model af
 # arguments from sys.argv, converts to appropriate type and takes defined action (default: 'store')
 args = parser.parse_args()
 
-
 class AlexNet(nn.Module):
-
     def __init__(self, num_classes=200):
         super(AlexNet, self).__init__()
         self.features = nn.Sequential(
@@ -64,7 +62,7 @@ class AlexNet(nn.Module):
 class Model:
     def __init__(self):
         self.train_batch_size =  100
-        self.epoch = 50
+        self.epoch = 51
         self.rate = 0.1 
         self.val_batch_size = 10
         def create_val_folder():
@@ -270,7 +268,10 @@ class Model:
                     'testing_loss': self.testing_loss,
                     'testing_acc': self.testing_acc,
                     'training_acc': self.training_acc,
-                    'time': self.time
+                    'time': self.time,
+                    'classes': self.classes,
+                    'tiny_class': self.tiny_classes
+
                     }
             save(state,better) 
         if plot == True:

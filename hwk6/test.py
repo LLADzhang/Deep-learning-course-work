@@ -85,4 +85,5 @@ class TestClass:
                 
             cam.release()
             cv2.destroyAllWindows()
-   
+md = TestModel()
+md.cam()
